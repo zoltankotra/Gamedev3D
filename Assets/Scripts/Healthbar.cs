@@ -25,7 +25,7 @@ public class Healthbar : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        health = gameManager.getHealth();
+        health = gameManager.GetHealth();
         healthBarWidth = health > 10 ? health + 6 : 16;
 
         rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, healthBarWidth);

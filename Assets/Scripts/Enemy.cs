@@ -4,14 +4,18 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, IDamageInterface
 {
+    private int health;
+    public int maxHealth;
+
     public NavMeshAgent agent;
     public Transform player;
     public LayerMask groundLayer, playerLayer, wallLayer;
     private GameManager gameManager;
 
-    private CapsuleCollider attackHitbox;
+    [SerializeField] private CapsuleCollider attackHitbox;
+    [SerializeField] private CapsuleCollider bodyCollider;
 
     Animator animator;
 
@@ -19,16 +23,19 @@ public class Enemy : MonoBehaviour
     public float attackExitRange;
     public bool playerInAttackRange;
 
-    private bool isAttacking = false;
+    private bool canChase = true;
 
     // Start is called before the first frame update
     void Start()
     {
+        health = maxHealth;
+
+
         player = GameObject.Find("Player").transform;
         gameManager = GameManager.FindAnyObjectByType<GameManager>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        attackHitbox = GetComponent<CapsuleCollider>();
+        //attackHitbox = GetComponent<CapsuleCollider>();
 
 
         attackHitbox.enabled = false;
@@ -39,28 +46,21 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        
-        if (!playerInAttackRange && !isAttacking) { chasePlayer(); }
-        else { AttackPlayer(); }
+        if (!playerInAttackRange && canChase) { ChasePlayer(); }
+        else if (playerInAttackRange) { AttackPlayer(); }
     }
 
     private void Update()
     {
-        float animationProgress = animator.GetCurrentAnimatorStateInfo(0).normalizedTime - (int)animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Attack") && 
-            animationProgress > 0.3f &&
-            animationProgress < 0.5f)
-        {
-            attackHitbox.enabled = true;
-        }
-        else { attackHitbox.enabled = false; }
+        
     }
 
-    private void chasePlayer()
+    private void ChasePlayer()
     {
         playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
 
         animator.SetBool("isAttacking", false);
+        animator.SetBool("isHurting", false);
 
         Ray ray = new Ray(transform.position + Vector3.up, player.position - transform.position);
         float rayLength = (player.position - transform.position).magnitude;
@@ -84,12 +84,20 @@ public class Enemy : MonoBehaviour
 
     private void AttackPlayer()
     {
-        //isAttacking = true;
         playerInAttackRange = Physics.CheckSphere(transform.position, attackExitRange, playerLayer);
         animator.SetBool("isAttacking", true);
         animator.SetBool("isRunning", false);
         agent.SetDestination(transform.position);
         transform.LookAt(player.position);
+
+        float animationProgress = animator.GetCurrentAnimatorStateInfo(0).normalizedTime - (int)animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Attack") &&
+            animationProgress > 0.38f &&
+            animationProgress < 0.45f)
+        {
+            attackHitbox.enabled = true;
+        }
+        else { attackHitbox.enabled = false; }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -98,5 +106,20 @@ public class Enemy : MonoBehaviour
         {
             gameManager.GetHit(10);
         }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        agent.SetDestination(transform.position);
+        health -= damage;
+        animator.CrossFade("Hurt",0.2f);
+        StartCoroutine(FinishAnimation());
+    }
+
+    IEnumerator FinishAnimation() // Switch to Animation event. This is causing issues when it takes damage twice within the specified time.
+    {
+        canChase = false;
+        yield return new WaitForSeconds(0.6f);
+        canChase = true;
     }
 }

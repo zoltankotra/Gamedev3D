@@ -13,6 +13,8 @@ public class GameManager : MonoBehaviour
 
     private float timePressed = 0f;
 
+    [SerializeField] private DamageOverlay damageOverlay;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -22,18 +24,27 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        handleInputQueues();
-
-
+        HandleInputQueues();
+        DamageTarget();
     }
+
+    private void FixedUpdate()
+    {
+        
+    }
+
+    // My functions
+
+    
 
     public void GetHit(int damage)
     {
         health -= damage;
+        damageOverlay.getHit();
         Debug.Log("Got hit. Current health: " + health);
     }
 
-    private void handleInputQueues()
+    private void HandleInputQueues()
     {
         if (Input.GetKey(KeyCode.W) ||
             Input.GetKey(KeyCode.A) ||
@@ -76,7 +87,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     private void RegisterKeypress(int key) 
     {
         inputQ.Enqueue(key);
@@ -85,7 +95,25 @@ public class GameManager : MonoBehaviour
         Debug.Log("InputQ: " + inputQ.ToArray()[3]);
     }
 
-    public int getHealth()
+    private void DamageTarget()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 100))
+            {
+                Debug.Log(hit.transform.name + " hit.");
+
+                if (hit.transform.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+                {
+                    hit.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage(10);
+                }
+            }
+        }
+    }
+
+    public int GetHealth()
     {
         return health;
     }
