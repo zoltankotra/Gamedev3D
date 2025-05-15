@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private DamageOverlay damageOverlay;
     [SerializeField] private HealOverlay healOverlay;
     [SerializeField] private InputDisplay inputDisplay;
+    [SerializeField] private GameplayUI gameplayUI;
 
     // Spells start here
     private readonly int[] spellFireballArray0 = new int[4] { 0, 0, 2, 0 };
@@ -33,6 +34,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Time.timeScale = 1f;
         health = maxHealth;
         inputQ = new Queue<int>(defaultQueueArray);
         timeQ.Clear();
@@ -77,6 +79,14 @@ public class GameManager : MonoBehaviour
         health -= damage;
         damageOverlay.GetHit();
         Debug.Log("Got hit. Current health: " + health);
+        if (health <= 0) { GameOver(); }
+    }
+
+    private void GameOver()
+    {
+        Time.timeScale = 0f;
+        gameplayUI.HideUI();
+        Cursor.lockState = CursorLockMode.None;
     }
 
     private void HandleInputQueues()

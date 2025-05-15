@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour, IDamageInterface
     public bool playerInAttackRange;
 
     private bool canChase = true;
+    private bool alive = true;
 
     // Start is called before the first frame update
     void Start()
@@ -46,8 +47,8 @@ public class Enemy : MonoBehaviour, IDamageInterface
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (!playerInAttackRange && canChase) { ChasePlayer(); }
-        else if (playerInAttackRange) { AttackPlayer(); }
+        if (!playerInAttackRange && canChase && alive) { ChasePlayer(); }
+        else if (playerInAttackRange && alive) { AttackPlayer(); }
     }
 
     private void Update()
@@ -112,6 +113,15 @@ public class Enemy : MonoBehaviour, IDamageInterface
     {
         agent.SetDestination(transform.position);
         health -= damage;
+        if (health <= 0)
+        {
+            animator.CrossFade("Death", 0.2f);
+            alive = false;
+            bodyCollider.enabled = false;
+            StartCoroutine(DeleteDead());
+            return;
+        }
+
         animator.CrossFade("Hurt",0.2f);
         StartCoroutine(FinishAnimation());
     }
@@ -121,5 +131,11 @@ public class Enemy : MonoBehaviour, IDamageInterface
         canChase = false;
         yield return new WaitForSeconds(0.6f);
         canChase = true;
+    }
+
+    IEnumerator DeleteDead()
+    {
+        yield return new WaitForSeconds(4f);
+        Destroy(gameObject);
     }
 }
