@@ -26,11 +26,10 @@ public class DamageOverlay : MonoBehaviour
         else if (image.color.a > 0f)
         {
             image.color = fadedBlood;
-            Debug.Log("Overlay alpha set to 0");
         }
     }
 
-    public void getHit()
+    public void GetHit()
     {
         image.color = freshBlood;
     }
