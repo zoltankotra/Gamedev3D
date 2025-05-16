@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private InputDisplay inputDisplay;
     [SerializeField] private GameplayUI gameplayUI;
     [SerializeField] private GameObject pauseUI;
+    [SerializeField] private GameObject startUI;
 
     [SerializeField] private Fireball fireballPrefabScript;
 
@@ -40,7 +42,8 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         pauseUI.gameObject.SetActive(false);
-        Time.timeScale = 1f;
+        Time.timeScale = 0f;
+        startUI.SetActive(true);
         health = maxHealth;
         inputQ = new Queue<int>(defaultQueueArray);
         timeQ.Clear();
@@ -70,7 +73,7 @@ public class GameManager : MonoBehaviour
 
         inputDisplay.UpdateStrengthDisplay(summedTime, timePressed, timeQ.Peek());
 
-        if (Input.GetButtonDown("Cancel") && health > 0)
+        if (Input.GetButtonDown("Cancel") && health > 0 && !startUI.activeInHierarchy)
         {
             TogglePauseMenu();
         }
@@ -83,6 +86,23 @@ public class GameManager : MonoBehaviour
     }
 
     // My functions
+
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void StartGame()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Time.timeScale = 1f;
+        startUI.SetActive(false);
+    }
 
     public void TogglePauseMenu()
     {
