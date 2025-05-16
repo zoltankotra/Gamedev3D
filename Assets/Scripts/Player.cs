@@ -64,6 +64,11 @@ public class Player : MonoBehaviour
         cameraChild.localRotation = Quaternion.Euler(mouseYValue, 0, 0);
     }
 
+    public void SetMouseSensitivity(float sensitivity)
+    {
+        mouseSensitivity = (sensitivity + 5) * 10;
+    }
+
     IEnumerator JustJumped()
     {
         canJump = false;

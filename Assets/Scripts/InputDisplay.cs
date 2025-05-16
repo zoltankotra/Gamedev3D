@@ -55,8 +55,8 @@ public class InputDisplay : MonoBehaviour
 
     public void UpdateStrengthDisplay(float strength, float potential, float loss) 
     {
-        currentWidth = (int)(strength * 30 + 14);
-        potentialWidth = (int)((strength + potential - loss) * 30 + 14);
+        currentWidth = (int)(strength * 50 + 14);
+        potentialWidth = (int)((strength + potential - loss) * 50 + 14);
         potentialWidth = potentialWidth > 164 ? 164 : potentialWidth;
         lossWidth = currentWidth >= potentialWidth ? potentialWidth : currentWidth;
 
@@ -72,7 +72,5 @@ public class InputDisplay : MonoBehaviour
         {
             lossBar.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentWidth);
         }
-
-        Debug.Log(strength + ": strength");
     }
 }
