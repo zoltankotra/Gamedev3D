@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Fireball : MonoBehaviour
@@ -11,6 +12,12 @@ public class Fireball : MonoBehaviour
 
     [SerializeField] private int damageMultiplier = 10;
     private float growth;
+    private Material ballMaterial;
+    private float aliveTime;
+    private float lifetime;
+
+    private Color startColor = new Color(1f, 0.25f, 0f, 1f);
+    private Color endColor = new Color(1f, 0.7f, 0f, 0.1f);
 
     public float power;
 
@@ -18,6 +25,9 @@ public class Fireball : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        lifetime = power / 10 + 0.4f;
+        aliveTime = 0f;
+        ballMaterial = outerBall.gameObject.GetComponent<MeshRenderer>().material;
         outerBall.transform.localScale = Vector3.zero;
         StartCoroutine(KillFireball());
         outerCollider.enabled = false;
@@ -27,19 +37,24 @@ public class Fireball : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        aliveTime += Time.deltaTime;
         growth = Time.deltaTime * (power + 3);
+        ballMaterial.SetColor("_Color",Color.Lerp(startColor,endColor,aliveTime/lifetime));
+        ballMaterial.SetColor("_EmissionColor", Color.Lerp(startColor * 2f, endColor * 0.1f, aliveTime / lifetime));
         outerBall.transform.localScale += new Vector3(growth, growth, growth);
     }
 
     private void OnTriggerEnter(Collider enemy)
     {
-        Debug.Log("Enemy inside fireball");
 
-        enemy.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage((int)(power * damageMultiplier));
-
-        if (Physics.CheckSphere(transform.position, 0.5f, enemyMask))
+        if (enemy.gameObject.tag == "Enemy")
         {
             enemy.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage((int)(power * damageMultiplier));
+
+            if (Physics.CheckSphere(transform.position, 0.5f, enemyMask))
+            {
+                enemy.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage((int)(power * damageMultiplier));
+            }
         }
     }
 
@@ -52,7 +67,7 @@ public class Fireball : MonoBehaviour
 
     private IEnumerator KillFireball()
     {
-        yield return new WaitForSeconds(power/10 + 0.4f);
+        yield return new WaitForSeconds(lifetime);
         Destroy(gameObject);
     }
 }

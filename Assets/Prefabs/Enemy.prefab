@@ -2548,7 +2548,7 @@ GameObject:
   - component: {fileID: 846188570099345953}
   m_Layer: 8
   m_Name: Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2639,7 +2639,7 @@ MonoBehaviour:
     m_Bits: 64
   wallLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 136
   attackHitbox: {fileID: 8571140362014552717}
   bodyCollider: {fileID: 1964829150427589089}
   attackRange: 1.2
@@ -2687,7 +2687,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.2
+  m_Radius: 0.21
   m_Height: 1.8
   m_Direction: 1
   m_Center: {x: 0, y: 0.91, z: 0}

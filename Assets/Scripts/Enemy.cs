@@ -118,6 +118,7 @@ public class Enemy : MonoBehaviour, IDamageInterface
             animator.CrossFade("Death", 0.2f);
             alive = false;
             bodyCollider.enabled = false;
+            gameManager.IncrementKillcount();
             StartCoroutine(DeleteDead());
             return;
         }

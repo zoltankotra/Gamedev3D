@@ -63,8 +63,10 @@
     <Compile Include="Assets\Scripts\DamageOverlay.cs" />
     <Compile Include="Assets\Scripts\Healthbar.cs" />
     <Compile Include="Assets\Scripts\HealOverlay.cs" />
+    <Compile Include="Assets\Scripts\GameOverUI.cs" />
     <Compile Include="Assets\Scripts\Enemy.cs" />
     <Compile Include="Assets\Scripts\MouseSlider.cs" />
+    <Compile Include="Assets\Scripts\IceShock.cs" />
     <Compile Include="Assets\Scripts\IDamageInterface.cs" />
     <Compile Include="Assets\Scripts\GameplayUI.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />

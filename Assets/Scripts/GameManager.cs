@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,16 +20,26 @@ public class GameManager : MonoBehaviour
     private float timePressed = 0f;
     private float summedTime = 0f;
 
+    private bool gameOver = false;
+
+    private int numberOfTotalEnemies;
+    private int enemiesKilled = 0;
+
+    [SerializeField] private Player player;
     [SerializeField] private DamageOverlay damageOverlay;
     [SerializeField] private HealOverlay healOverlay;
     [SerializeField] private InputDisplay inputDisplay;
     [SerializeField] private GameplayUI gameplayUI;
     [SerializeField] private GameObject pauseUI;
     [SerializeField] private GameObject startUI;
+    [SerializeField] private GameOverUI gameOverUI;
+    [SerializeField] private GameObject killCounter;
+
+
+    [SerializeField] private IceShock crystalInstance;
+    [SerializeField] private LayerMask obstacleMask;
 
     [SerializeField] private Fireball fireballPrefabScript;
-
-    [SerializeField] private Animator wandAnimator;
 
     // Spells start here
     private readonly int[] spellFireballArray0 = new int[4] { 0, 0, 2, 0 };
@@ -42,6 +54,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         pauseUI.gameObject.SetActive(false);
+        gameOverUI.gameObject.SetActive(false);
         Time.timeScale = 0f;
         startUI.SetActive(true);
         health = maxHealth;
@@ -51,6 +64,8 @@ public class GameManager : MonoBehaviour
         {
             timeQ.Enqueue(0f);
         }
+        numberOfTotalEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
+        killCounter.GetComponent<TMP_Text>().text = enemiesKilled.ToString() + "/" + numberOfTotalEnemies.ToString();
     }
 
     // Update is called once per frame
@@ -73,17 +88,13 @@ public class GameManager : MonoBehaviour
 
         inputDisplay.UpdateStrengthDisplay(summedTime, timePressed, timeQ.Peek());
 
-        if (Input.GetButtonDown("Cancel") && health > 0 && !startUI.activeInHierarchy)
+        if (Input.GetButtonDown("Cancel") && !gameOver && !startUI.activeInHierarchy)
         {
             TogglePauseMenu();
         }
         
     }
 
-    private void FixedUpdate()
-    {
-        
-    }
 
     // My functions
 
@@ -102,6 +113,7 @@ public class GameManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Time.timeScale = 1f;
         startUI.SetActive(false);
+        gameplayUI.gameObject.SetActive(true);
     }
 
     public void TogglePauseMenu()
@@ -136,9 +148,31 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
+        gameOver = true;
         Time.timeScale = 0f;
         gameplayUI.HideUI();
         Cursor.lockState = CursorLockMode.None;
+        gameOverUI.gameObject.SetActive(true);
+
+        if (health > 0)
+        {
+            gameOverUI.SetMessage("Glorious Victory");
+        }
+        else
+        {
+            gameOverUI.SetMessage("Defeat");
+        }
+    }
+
+    public void IncrementKillcount()
+    {
+        enemiesKilled += 1;
+        killCounter.GetComponent<TMP_Text>().text = enemiesKilled.ToString() + "/" + numberOfTotalEnemies.ToString();
+
+        if (enemiesKilled >= numberOfTotalEnemies)
+        {
+            StartCoroutine(InititateVictory());
+        }
     }
 
     private void HandleInputQueues()
@@ -154,25 +188,21 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W))
         {
             RegisterKeypress(0);
-            wandAnimator.CrossFade("Up", 0.1f);
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             RegisterKeypress(1);
-            wandAnimator.CrossFade("Left", 0.1f);
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
             RegisterKeypress(2);
-            wandAnimator.CrossFade("Down", 0.1f);
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             RegisterKeypress(3);
-            wandAnimator.CrossFade("Right", 0.1f);
         }
 
         if (Input.GetKeyUp(KeyCode.W) ||
@@ -231,7 +261,7 @@ public class GameManager : MonoBehaviour
         }
         if (inputQ.SequenceEqual(spellIceArray0) || inputQ.SequenceEqual(spellIceArray1))
         {
-
+            SpellIceShock(summedTime);
             ResetInputQueue();
             inputDisplay.UpdateInputDisplay(inputQ);
 
@@ -240,7 +270,7 @@ public class GameManager : MonoBehaviour
         }
         if (inputQ.SequenceEqual(spellHealArray0) || inputQ.SequenceEqual(spellHealArray1))
         {
-            SpellHeal(summedTime * 5);
+            SpellHeal(summedTime);
             ResetInputQueue();
             inputDisplay.UpdateInputDisplay(inputQ);
 
@@ -274,7 +304,7 @@ public class GameManager : MonoBehaviour
 
     private void SpellHeal(float strength)
     {
-        health = (int)(health + strength > maxHealth ? 100 : health + strength);
+        health = (int)(health + strength > maxHealth ? 100 : health + strength * 5);
         healOverlay.Heal();
     }
     
@@ -287,5 +317,26 @@ public class GameManager : MonoBehaviour
             var summonedFireball = Instantiate(fireballPrefabScript, hit.point, Quaternion.identity);
             summonedFireball.power = strength;
         }
+    }
+
+    private void SpellIceShock(float strength)
+    {
+        Ray forwardRay = new Ray(player.transform.position + 1.5f * Vector3.up, player.transform.forward);
+        Ray downRay = new Ray(player.transform.position + 1.5f * Vector3.up + player.transform.forward, Vector3.down);
+        RaycastHit hit;
+        if (!Physics.Raycast(forwardRay, 1.5f, obstacleMask) && Physics.Raycast(downRay, out hit, 4f, obstacleMask))
+        {
+            var summonedCrystal = Instantiate(crystalInstance, hit.point, player.transform.rotation);
+            summonedCrystal.power = strength;
+            summonedCrystal.count = 1;
+        }
+    }
+
+    // Coroutines
+
+    private IEnumerator InititateVictory()
+    {
+        yield return new WaitForSeconds(3);
+        GameOver();
     }
 }
