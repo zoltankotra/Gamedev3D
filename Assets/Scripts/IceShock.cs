@@ -55,7 +55,7 @@ public class IceShock : MonoBehaviour
     {
         if (enemy.gameObject.tag == "Enemy")
         {
-            enemy.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage((int)(50f / count));
+            enemy.transform.gameObject.GetComponent<IDamageInterface>().TakeDamage((int)(40f / count + 10));
         }
         
     }

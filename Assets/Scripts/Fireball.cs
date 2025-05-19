@@ -10,7 +10,7 @@ public class Fireball : MonoBehaviour
     [SerializeField] private SphereCollider outerCollider;
     [SerializeField] private LayerMask enemyMask;
 
-    [SerializeField] private int damageMultiplier = 10;
+    [SerializeField] private int damageMultiplier = 15;
     private float growth;
     private Material ballMaterial;
     private float aliveTime;
@@ -38,7 +38,7 @@ public class Fireball : MonoBehaviour
     void Update()
     {
         aliveTime += Time.deltaTime;
-        growth = Time.deltaTime * (power + 3);
+        growth = Time.deltaTime * (power + 4);
         ballMaterial.SetColor("_Color",Color.Lerp(startColor,endColor,aliveTime/lifetime));
         ballMaterial.SetColor("_EmissionColor", Color.Lerp(startColor * 2f, endColor * 0.1f, aliveTime / lifetime));
         outerBall.transform.localScale += new Vector3(growth, growth, growth);
