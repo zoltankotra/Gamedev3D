@@ -65,7 +65,7 @@ public class Player : MonoBehaviour
 
     public void SetMouseSensitivity(float sensitivity)
     {
-        mouseSensitivity = (sensitivity + 5) * 10;
+        mouseSensitivity = (sensitivity + 4) * 8;
     }
 
     IEnumerator JustJumped()

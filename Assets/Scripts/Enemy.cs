@@ -143,11 +143,25 @@ public class Enemy : MonoBehaviour, IDamageInterface
         StartCoroutine(FinishAnimation());
     }
 
+    public void SetHealthAndAttack(int healthToBeSet, int attackToBeSet)
+    {
+        health = healthToBeSet;
+        damage = attackToBeSet;
+        maxHealth = healthToBeSet;
+    }
+
     public void SetDifficulty(int diff)
     {
+        Debug.Log("Difficulty set to" + diff);
         damage = 7 + diff * 5;
         maxHealth = 50 + diff * 50;
         health = 50 + diff * 50;
+        Debug.Log($"Damage: {damage}, health: {health}");
+
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy"))
+        {
+            enemy.gameObject.GetComponent<IDamageInterface>().SetHealthAndAttack(health, damage);
+        }
     }
 
     IEnumerator FinishAnimation() // Switch to Animation event. This is causing issues when it takes damage twice within the specified time.

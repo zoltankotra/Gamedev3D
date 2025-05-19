@@ -5,4 +5,5 @@ using UnityEngine;
 public interface IDamageInterface
 {
     void TakeDamage(int damage);
+    void SetHealthAndAttack(int health, int attack);
 }

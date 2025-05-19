@@ -25,6 +25,8 @@ public class GameManager : MonoBehaviour
     private int numberOfTotalEnemies;
     private int enemiesKilled = 0;
 
+
+
     [SerializeField] private Player player;
     [SerializeField] private DamageOverlay damageOverlay;
     [SerializeField] private HealOverlay healOverlay;
@@ -185,22 +187,22 @@ public class GameManager : MonoBehaviour
             timePressed += Time.deltaTime;
         }
 
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetButtonDown("Forward"))
         {
             RegisterKeypress(0);
         }
 
-        if (Input.GetKeyDown(KeyCode.A))
+        if (Input.GetButtonDown("Left"))
         {
             RegisterKeypress(1);
         }
 
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetButtonDown("Backward"))
         {
             RegisterKeypress(2);
         }
 
-        if (Input.GetKeyDown(KeyCode.D))
+        if (Input.GetButtonDown("Right"))
         {
             RegisterKeypress(3);
         }
@@ -304,7 +306,7 @@ public class GameManager : MonoBehaviour
 
     private void SpellHeal(float strength)
     {
-        health = (int)(health + strength > maxHealth ? 100 : health + strength * 5);
+        health = (int)(health + strength * 6 > maxHealth ? 100 : health + strength * 6);
         healOverlay.Heal();
     }
     
