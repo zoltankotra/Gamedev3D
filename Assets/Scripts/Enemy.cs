@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using static UnityEngine.GraphicsBuffer;
 
 public class Enemy : MonoBehaviour, IDamageInterface
 {
+    public int damage = 6;
     private int health;
-    public int maxHealth;
+    public int maxHealth = 50;
 
     public NavMeshAgent agent;
     public Transform player;
@@ -25,6 +27,7 @@ public class Enemy : MonoBehaviour, IDamageInterface
 
     private bool canChase = true;
     private bool alive = true;
+    private Vector3 playerLastSeenPosition;
 
     // Start is called before the first frame update
     void Start()
@@ -40,56 +43,68 @@ public class Enemy : MonoBehaviour, IDamageInterface
 
 
         attackHitbox.enabled = false;
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
+        playerInAttackRange = Physics.CheckSphere(transform.position + Vector3.up * 1.5f, attackRange, playerLayer);
         animator.SetFloat("animationOffset", Random.value);
+
+        agent.autoTraverseOffMeshLink = false;
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         if (!playerInAttackRange && canChase && alive) { ChasePlayer(); }
         else if (playerInAttackRange && alive) { AttackPlayer(); }
     }
 
-    private void Update()
-    {
-        
-    }
-
     private void ChasePlayer()
     {
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
+        playerInAttackRange = Physics.CheckSphere(transform.position + Vector3.up * 1.5f, attackRange, playerLayer);
 
         animator.SetBool("isAttacking", false);
         animator.SetBool("isHurting", false);
 
         Ray ray = new Ray(transform.position + Vector3.up, player.position - transform.position);
         float rayLength = (player.position - transform.position).magnitude;
-        RaycastHit hit;
-        if (!Physics.Raycast(ray, out hit, rayLength, wallLayer))
+        if (!Physics.Raycast(ray, rayLength, wallLayer))
         {
-            agent.SetDestination(player.position);
-            animator.SetBool("isRunning", true);
+            var path = new NavMeshPath();
+            agent.CalculatePath(player.position, path);
 
-            Debug.DrawRay(transform.position + Vector3.up, player.position - transform.position, Color.green);
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                agent.SetDestination(player.position);
+            }
+            
+
+            
+
+            if (!agent.hasPath)
+            {
+                Debug.Log(agent.hasPath + " " + agent.velocity.magnitude + " " + path.status);
+            }
+
+
+            
+            animator.SetBool("isRunning", true);
         }
         else if (agent.remainingDistance < attackRange)
         {
             agent.SetDestination(transform.position);
             animator.SetBool("isRunning", false);
-            Debug.DrawRay(transform.position + Vector3.up, player.position - transform.position, Color.yellow);
         }
-        else { Debug.DrawRay(transform.position + Vector3.up, player.position - transform.position, Color.red); }
         
     }
 
     private void AttackPlayer()
     {
-        playerInAttackRange = Physics.CheckSphere(transform.position, attackExitRange, playerLayer);
+        playerInAttackRange = Physics.CheckSphere(transform.position + Vector3.up * 1.5f, attackExitRange, playerLayer);
         animator.SetBool("isAttacking", true);
         animator.SetBool("isRunning", false);
         agent.SetDestination(transform.position);
-        transform.LookAt(player.position);
+        Vector3 targetPostition = new Vector3(player.position.x,
+                                              transform.position.y,
+                                              player.position.z);
+        transform.LookAt(targetPostition);
 
         float animationProgress = animator.GetCurrentAnimatorStateInfo(0).normalizedTime - (int)animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Attack") &&
@@ -105,7 +120,7 @@ public class Enemy : MonoBehaviour, IDamageInterface
     {
         if (other.name == "Player")
         {
-            gameManager.GetHit(10);
+            gameManager.GetHit(damage);
         }
     }
 
@@ -113,8 +128,9 @@ public class Enemy : MonoBehaviour, IDamageInterface
     {
         agent.SetDestination(transform.position);
         health -= damage;
-        if (health <= 0)
+        if (health <= 0 && alive)
         {
+            attackHitbox.enabled = false;
             animator.CrossFade("Death", 0.2f);
             alive = false;
             bodyCollider.enabled = false;
@@ -125,6 +141,13 @@ public class Enemy : MonoBehaviour, IDamageInterface
 
         animator.CrossFade("Hurt",0.2f);
         StartCoroutine(FinishAnimation());
+    }
+
+    public void SetDifficulty(int diff)
+    {
+        damage = 7 + diff * 5;
+        maxHealth = 50 + diff * 50;
+        health = 50 + diff * 50;
     }
 
     IEnumerator FinishAnimation() // Switch to Animation event. This is causing issues when it takes damage twice within the specified time.
@@ -139,4 +162,5 @@ public class Enemy : MonoBehaviour, IDamageInterface
         yield return new WaitForSeconds(4f);
         Destroy(gameObject);
     }
+
 }
